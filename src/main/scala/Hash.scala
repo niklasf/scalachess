@@ -9,8 +9,8 @@ object Hash {
   private def apply(str: String): PositionHash =
     MessageDigest getInstance "MD5" digest (str getBytes "UTF-8") take size
 
-  def apply(actors: Iterable[Actor], color: Color): PositionHash = apply {
-    actors.map { a =>
+  def apply(board: Board, color: Color): PositionHash = apply {
+    board.actors.values.map { a =>
       s"${a.piece.forsyth}${a.pos.key}"
     }.mkString + color.letter
   }
