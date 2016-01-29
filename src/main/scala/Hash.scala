@@ -1,10 +1,7 @@
 package chess
 
-import java.security.MessageDigest
-
-object Hash {
-
-  private[chess] val size = 3
+class Hash(
+    size: Int) {
 
   private def roleIndex(role: Role) = role match {
     case Pawn   => 0
@@ -20,37 +17,50 @@ object Hash {
     case White => roleIndex(piece.role) * 2 + 1
   }
 
+  private def posIndex(pos: Pos) =
+    8 * (pos.y - 1) + (pos.x - 1)
+
   private def actorIndex(actor: Actor) =
-    64 * pieceIndex(actor.piece) + 8 * (actor.pos.y - 1) + (actor.pos.x - 1)
+    64 * pieceIndex(actor.piece) + posIndex(actor.pos)
 
   private def hexToBytes(str: String): PositionHash =
     str.grouped(2).map(cc =>
       (Character.digit(cc(0), 16) << 4 | Character.digit(cc(1), 16)).toByte
-    ).toArray
+    ).toArray take size
 
   def apply(board: Board, color: Color): PositionHash = {
     val pieces = board.actors.values.map { a =>
-      actorMasks(actorIndex(a)) take size
+      actorMasks(actorIndex(a))
     }
 
     val turn = color match {
-      case Black => Array()
-      case White => Array(whiteTurnMask take size)
+      case Black => Array(zeroMask)
+      case White => Array(whiteTurnMask)
     }
 
     val castling = (board.history.castles.toList zip castlingMasks).map {
-      case (canCastle, mask) =>
-        (if (canCastle) mask else zeroMask) take size
+      case (canCastle, castlingMask) =>
+        if (canCastle) castlingMask else zeroMask
     }
 
-    val masks = pieces ++ turn ++ castling
+    val crazyPromotions = board.crazyData match {
+      case Some(data) =>
+        (data.promoted.map {
+          pos => crazyhousePromotionMasks(posIndex(pos))
+        }).toArray
+      case None =>
+        Array(zeroMask)
+    }
+
+    // TODO: en passant
+    // TODO: crazyhouse data
+
+    val masks = pieces ++ turn ++ castling ++ crazyPromotions
 
     (masks.transpose.map { column =>
       column.reduce((a, b) => (a ^ b).toByte)
     }).toArray
   }
-
-  def debug(hashes: PositionHash) = hashes.map(_.toInt).sum.toString
 
   val zeroMask = hexToBytes("00000000000000000000000000000000")
 
@@ -447,4 +457,59 @@ object Hash {
     "8dbc6f870cc7674031d71dce64b2c310", "c99e7c5943b3f9d6f165b587df898190",
     "70e08357248f0443a57e6339dd2cf3a0", "a37864d81d8346f91ef6e6dbb1961ec9"
   ).map(hexToBytes)
+
+  val enPassantMasks = Array(
+    "d119b20d222046ee70cc73d90bc26e24", "0b567120b675eff7e21a6b35df0c3ad7",
+    "bee3aa7dafeddba5003a93d8b2806962", "c8a93e7560c0c7901c99ded33cb890a1",
+    "91c176e88aa56452cf3145de0add4289", "16ec61cd0b0e192bd0e4427a5514fb72",
+    "fee16f89f29991ad77c621cc9fb3a483", "cd29913e2af30d9a67a34dac4356550b"
+  ).map(hexToBytes)
+
+  val crazyhousePromotionMasks = Array(
+    "d0702818d494e16e72b3d2aacdfc6c82", "3266754535342391514c869e81f21cc8",
+    "7d9222d9423b2de1c7cd969b483d16da", "c68ee77cd59630e936138f35691041e0",
+    "1470a42b71497680c553edaa15372e00", "ad53264919194eca7989143c311f667c",
+    "402fc941dcaa32aeeb27f596d3aa6099", "a9669eb65321e0d7c9b528fe52268438",
+    "0dfa46320d99c723770db3ad7b5489ce", "7f475748a1829871335fe9afd5ca2a3a",
+    "6abc62bd1f3f5d3b371b8f6fccbf3c86", "4b2e8d79aaf7088b0ffb8dfd0dfeda0a",
+    "85f78f5a0c7d7091e84bdd000827dd83", "54ec16bfd214d4dc95843ca5892b8fd3",
+    "1d3ec632718122754a3d7c09497ab2f2", "f76d2c18dc4b9cb90d37ae19b80025e2",
+    "f0c6957fe0138e13d5466e48dc3ca24a", "c01459f6aac525ad99f55e3a728a767b",
+    "30d9244419c625a01244bf1413f836c2", "ab3e71b345e0b5647a8d66183c131432",
+    "03ce61dc1d19e4d6fed23b61fcd96ceb", "2dc47255790e0fd25f1cf92613cc4cd3",
+    "7bbd5865efb887f458724ace208cd24b", "550c3b1c9d8ac55276f0cdb3b65bdda7",
+    "68eecd2afcb52bd2ba971e61b5d5448b", "333770ac0e1753ee54ae902e80510201",
+    "543b3bb860951d5466549d84ad1d3151", "e5a5dbd3a5c070456a157334af138e60",
+    "085e880ba5b8d597028da4964ca31858", "a2e08447c3ab0068af53afd06f4f6f6c",
+    "468e162957bae91ddcb5fb2d847b52a8", "2f2c83af2ccb0c86049d92d882d8ee85",
+    "eec4bef10cecf92761db86710c5d5f6d", "21cae3da82d58904b1b39b2c1aa5723f",
+    "e1c8e3c42314ab73ba30908d9fd840c8", "18dee1defa23936ec4f8a5d4b399a1ba",
+    "27bfbe7882ac7188fab9ad7058e3c158", "4f6afcc1e42b603d7318a86705938ee6",
+    "8cb2f553788b4e02c0275477f0dc4b43", "27fadb1cfd2c3925aa40d1963f280b84",
+    "19025f1b1adafa7ee84a7210d062010e", "9d775715d8ad11951df8e48f14d1a540",
+    "bfd9334474b8c5a31e5ae02c34b7910e", "716d05814fa69ae1c76dc94af2058f42",
+    "071e44688864934b144ada04fff8ff7f", "6e5c148c978128a08c1ac78aa3d57eaa",
+    "9e2aca0f71c079654fd6129ddbf6c9c4", "990dcc48edae154c26bf80ee1a829856",
+    "9a7a7e410014edad4b0ed4a7600d8ebc", "3b4b7393dbd6c62d4acf24fd99e0f592",
+    "0b79e2d9de79da6d556f3e789fcc5e40", "82e6a9997c4b22c0311f3eb68f0e2431",
+    "fc0d770840c075796c5f6f7fc6eec79a", "5e30b32d2952c6ff5bc5d97162e01d70",
+    "c1d002065a0ecad4adf01cc4c6b885ec", "520cfee9df01ebd2e87d847fef355418",
+    "c4533f5523dda67bc06cd29e8b664813", "ffeedb1a3f45c698beca04d42181de4d",
+    "618ca396312509df396c17e438378ee4", "1528d65e831e2c76a224706c57e7ad10",
+    "c3209e0bc03fd4e0b02a9ed2fe1d3f64", "700940191774fc6437544e71316d1a8c",
+    "987fb6b8d6d877d7772873fbf043eb84", "5ff2907322f8347d009eeb030ade865c"
+  ).map(hexToBytes)
+
+}
+
+object Hash {
+
+  val size = 3
+
+  private val h = new Hash(size)
+
+  def apply(board: Board, color: Color): PositionHash = h.apply(board, color)
+
+  def debug(hashes: PositionHash) = hashes.map(_.toInt).sum.toString
+
 }
