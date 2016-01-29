@@ -39,12 +39,15 @@ class Hash(
     ).toArray take size
   }
 
-  def apply(board: Board, color: Color): PositionHash = {
+  def apply(situation: Situation): PositionHash = {
+    val board = situation.board
+    val stm = situation.color
+
     val actors = board.actors.values.map { a =>
       actorMasks(actorIndex(a))
     }
 
-    val turn = color match {
+    val turn = stm match {
       case Black => Array(zeroMask)
       case White => Array(whiteTurnMask)
     }
@@ -52,6 +55,15 @@ class Hash(
     val castling = (board.history.castles.toList zip castlingMasks).map {
       case (canCastle, castlingMask) =>
         if (canCastle) castlingMask else zeroMask
+    }
+
+    // According to FIDE rules en-passant needs to be completely legal in order
+    // to make a difference with regards to threefold repetition.
+    val ep = situation.moves.values.flatten.find(_.enpassant) match {
+      case Some(move) =>
+        Array(enPassantMasks(move.dest.x - 1))
+      case None =>
+        Array(zeroMask)
     }
 
     val crazy = board.crazyData match {
@@ -69,14 +81,15 @@ class Hash(
         Array(zeroMask)
     }
 
-    // TODO: en passant
-
-    val masks = actors ++ turn ++ castling ++ crazy
+    val masks = actors ++ turn ++ castling ++ ep ++ crazy
 
     (masks.transpose.map { column =>
       column.reduce((a, b) => (a ^ b).toByte)
     }).toArray
   }
+
+  // The first 8 bytes of the following masks are compatible with the Polyglot
+  // opening book format. The second half is generated randomly.
 
   val zeroMask = hexToBytes("00000000000000000000000000000000")
 
@@ -596,14 +609,13 @@ class Hash(
 
 }
 
-
 object Hash {
 
   val size = 3
 
   private lazy val h = new Hash(size)
 
-  def apply(board: Board, color: Color): PositionHash = h.apply(board, color)
+  def apply(situation: Situation): PositionHash = h.apply(situation)
 
   def debug(hashes: PositionHash) = hashes.map(_.toInt).sum.toString
 
