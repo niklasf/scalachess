@@ -23,10 +23,21 @@ class Hash(
   private def actorIndex(actor: Actor) =
     64 * pieceIndex(actor.piece) + posIndex(actor.pos)
 
-  private def hexToBytes(str: String): PositionHash =
+  private def crazyPocketIndex(role: Role, color: Color, count: Int) = {
+    assert(0 < count && count <= 16)
+    assert(roleIndex(role) < 5)
+
+    color match {
+      case Black => 16 * roleIndex(role) + (count - 1)
+      case White => 16 * roleIndex(role) + (count - 1) + 16 * 5
+    }
+  }
+
+  private def hexToBytes(str: String): PositionHash = {
     str.grouped(2).map(cc =>
       (Character.digit(cc(0), 16) << 4 | Character.digit(cc(1), 16)).toByte
     ).toArray take size
+  }
 
   def apply(board: Board, color: Color): PositionHash = {
     val pieces = board.actors.values.map { a =>
@@ -43,19 +54,24 @@ class Hash(
         if (canCastle) castlingMask else zeroMask
     }
 
-    val crazyPromotions = board.crazyData match {
+    val crazy = board.crazyData match {
       case Some(data) =>
-        (data.promoted.map {
-          pos => crazyhousePromotionMasks(posIndex(pos))
-        }).toArray
+        ((data.promoted.map {
+          pos => crazyPromotionMasks(posIndex(pos))
+        }) ++ (data.pockets.white.roles.groupBy(identity).map {
+          case (role, list) =>
+            crazyPocketMasks(crazyPocketIndex(role, White, list.size))
+        }) ++ (data.pockets.black.roles.groupBy(identity).map {
+          case (role, list) =>
+            crazyPocketMasks(crazyPocketIndex(role, Black, list.size))
+        })).toArray
       case None =>
         Array(zeroMask)
     }
 
     // TODO: en passant
-    // TODO: crazyhouse data
 
-    val masks = pieces ++ turn ++ castling ++ crazyPromotions
+    val masks = pieces ++ turn ++ castling ++ crazy
 
     (masks.transpose.map { column =>
       column.reduce((a, b) => (a ^ b).toByte)
@@ -465,7 +481,7 @@ class Hash(
     "fee16f89f29991ad77c621cc9fb3a483", "cd29913e2af30d9a67a34dac4356550b"
   ).map(hexToBytes)
 
-  val crazyhousePromotionMasks = Array(
+  val crazyPromotionMasks = Array(
     "d0702818d494e16e72b3d2aacdfc6c82", "3266754535342391514c869e81f21cc8",
     "7d9222d9423b2de1c7cd969b483d16da", "c68ee77cd59630e936138f35691041e0",
     "1470a42b71497680c553edaa15372e00", "ad53264919194eca7989143c311f667c",
@@ -500,13 +516,91 @@ class Hash(
     "987fb6b8d6d877d7772873fbf043eb84", "5ff2907322f8347d009eeb030ade865c"
   ).map(hexToBytes)
 
+  val crazyPocketMasks = Array(
+    "2480cb59501240d40792674e0fa16807", "3ffee4eb7f7deb5c33b2af4dd0fd4c98",
+    "c9bde33b07fb10b2c987673f28641f88", "9185ed273ea68bba47f8070ad4afcc4e",
+    "0ad05971e507beff0413e5eeb6556fc1", "e7352b75b09334c82a9e35ba4152ed46",
+    "fc581d7c6bc860d5008ef610aac2c836", "d77c7155c3927165ccd803a5da2d936c",
+    "d9973d5a3f70726c48d2dc05b98703e8", "88033acd407d16012441debe80b1c133",
+    "20322a651cb86ca2947c7df33124e08c", "5b8c94bbcba35e42686378db78112159",
+    "5320abab99faf0583351edc64817cda7", "28d0028993de82a7ed4897375b2774c4",
+    "fffeb8c4e3d35d0c66fa9c2b6618c461", "da490c50fb66a27eed0a37a3751ab8bc",
+    "3d93ce387f9c4849ad5c41d9b060e6a8", "f738d2e9a81ca09152734bb6a52472d3",
+    "e1e6f20d7c27c795282a939ffdf570d8", "738c22abc125090feb5bd4ff5e4b288a",
+    "10cc8a56eacee028ca6af742c8fc42bc", "7892578bd1390182a6b55b0a283d6249",
+    "485c342b982f01c97625a7389744f004", "e499b19d3ae4b89fe6ce46eb9b6b7a2c",
+    "a32c74fc4fc9999bd8bd044aa42941b8", "aaada9fbdc269a145c330c8420018509",
+    "e2709998ad98c3e2029efc86aad69767", "101288681f1877f327156f0b4c27ed6c",
+    "85fb4ccefac0642b89696e74d40c8bda", "9cb716220fd5ed2d495d411fe1579cab",
+    "fafb3de16ae101301111a8421c28c939", "2ee299850cb2ad66943f2f3bda59d6bc",
+    "9d527bc00ab1141ba62be16c78e9c84c", "a9cfa1f99153371a7154b2bffa50b95b",
+    "9540d70eb5a9996ddebd43bb6c9a8ae2", "3cb14421df1a6324c09fb2544143fca1",
+    "2808ea766ac539ecd4029f4912f20174", "c8ecc8ed85b3b89fe85332b1efbf7acc",
+    "a145935640a197834060d29465972906", "29d246fde5f66dba6788b47b8762c003",
+    "b8503bd2394e04d7124dbb547e160476", "ad8fb26fff9cf88489d150fb418a36ae",
+    "5d703d19256fbcba09ead527f8b6fc79", "9eaf4337ff24d1e10fc233a693fe8792",
+    "9a580b7a7ae38e4f4ca4cab6fd9263c8", "69071ea2891141e1f933767c57d88289",
+    "ae632632324353cd045774c8589be691", "f606cfa1a859f412fd091f84a5db71f5",
+    "7f9438fc36fc6613503c2d65546a349f", "448e2d232c1cad5330649e278df37ac8",
+    "5ba7ed45260c39da9745dad4bc1b0878", "96bc98dc18fc8b5d4e5a1591f724a71f",
+    "61a1f11132bdaf125092f9e2108ca555", "a2eecbc71006596ace2a8e664ed24ac8",
+    "a2f70f03bc8259783f7f5cc6bfe050b7", "7cc9f722c6affe77a1140031de44490b",
+    "fe49f63f3d3ca34b11014ad319778cad", "88c25f0fd47eeb02943166178405241f",
+    "9307c917f150a78cb70a3fe9a83d1602", "1c039a9f86a0491181f431e1ed51d2d9",
+    "95c23f6afdf68e04ae74d211c68f0e1d", "9cc2633351d222e07b24f022c8a84cf3",
+    "25ddd0e6bef2af12dbbcc46948173cbf", "a65fc20bfa5c2da5f9f6b7eb4a396773",
+    "6364ddb47ff6d218f057a74636a4ca66", "5071cce399d319046ca259e521d01bee",
+    "3e2331052c206e7603ed85dea70255a9", "b8dda040eccd497c6fcf630b2e4d8017",
+    "5b19cf6ba363dbb0a197d3b86c435387", "2f0526406efdd5f391cdb3c54ad7824a",
+    "88d1116d2e10c113cc2a9a086d9578ab", "1b437b7e3213cdd60b95fb0ab93ccc9a",
+    "60f3764c6a64e1a845da46fa15020a9c", "41ebf5a3541bcaa452cceae1f8b96c66",
+    "7212c70c931c9cd1cd4c8124f6e022a2", "74d164114a5185e4833a416d81ba108e",
+    "0fbefb8b1d4116257ea09c1b02ac2988", "6350ad45c6af5906d2942362d0d1d250",
+    "cd1aaa7ec2ccea49b754028611e34734", "b08ef7e1f9e385a1fe206c11831b0e7f",
+    "810092b3b6bde7f8d8f74b9c59c88741", "59b933b5563821c030c1ebbc6878e90d",
+    "319bc697aa31277656d5c5b0d0a697bc", "621b585c22b9c640f416ca9e70cbec98",
+    "4fc59feea8664084411ae5b5fb0b19ad", "347df09288614cd4e59ccd278015b246",
+    "9341584eb45fb970df29a5b0cab1328c", "2048beccf9b7765adf5e054e58af2ef4",
+    "98f38765ba929c7c1b96c0ba20e8c3af", "8bb28cd7ceed552b205e80571b56f3b6",
+    "45aade500e320dba3bb0422a82f093c6", "98ffa31dc90343c63fd9476f5b80cb04",
+    "e43d98ac2c07bdfe3564127574e2915f", "07bdb893daff7ff3ef92e16ba88f860c",
+    "c38daf2f0c419bea3377c56f18bb7220", "31d6d1f8e8956673c49f7c6c27ab64c3",
+    "a7091e4950abe5d67a0015d1ca8d3567", "d0d3e75d3d49967d26a02d2d3e473589",
+    "514636dfa2ec8abbf93de62060b63413", "f75edf6942f6217a900f1341e8aafff9",
+    "a64a8b064393dbdc6e075dea24be616d", "d6d23d9cd8e50cec954dbb8ec171c76b",
+    "4dca3ff6f451d65e2efbe8197b00c4ce", "61e6448dc72aa1c379865ef8060040f0",
+    "cf161da0f368dc7f369b6fe712fb397a", "579f4b52df9e9184ece253ee62d88a93",
+    "b40d4ce49da240529a4bf475bde4f51c", "9d835364cdf2e795af78532c82c7f4d9",
+    "c82af467a8f70c6895afea3ab27f2fcd", "85df9e7a8f68757173f1318599202227",
+    "795d9fbe062124c5ab95e605ec2f70df", "780148dcadd0d4db36f1a120ee047888",
+    "0212beac4cf7d3dfbd76293c36e1947e", "ef596c7c57adffe4c4ac4d8e75dd22a0",
+    "5577aec9035845b8e5c8f9b05c65e2f3", "c3decfc3be961a2d4070aa2fff874be0",
+    "6eed0c37c96759bb605e84a72169d02d", "ccf19c3801a8cf9d151724850fbddeb1",
+    "83a5021b14c607f2721d57456a1938e9", "2fb8f78d3e0a016913cf575db6dcc5cf",
+    "ce5a257539ebaa7867d46fd882c70e58", "d6dfece79555da6dad22fc98855899a7",
+    "eff86b02b7e16463623d0c4a41ba0ac7", "0b1786829b02d6576673ab786e4ec570",
+    "4fa40c9a2667868c95239c3bdcfc5432", "eef79aa137a4e2d361f6db467fa03e3b",
+    "f5582709fefc15ff2243173da844549c", "53b8a76097880fec53cd713b9883f4ef",
+    "553884eac8c61dc49c5764c7f0c9c786", "d0983932ea932617d7e3f1d242a95059",
+    "acf400f4bb908140068fbb6925413caa", "2b416728bb2ed83e2256b6c4448cda9a",
+    "acc196cca0a104a23ed7d8daa81546b1", "e0519cc04367298ffdae63730fe9ca99",
+    "ff112062b2f24610ca36bfd6e859fcbb", "c2276f9540053480f350ab1e047b1dbe",
+    "b1cadb5abc308777adea8760bbd638fd", "6d727ee7c51ffbaf84063a532235a55c",
+    "93e6c7c98ad30edfaf822d7f3d0b31e5", "342d889ee49a7ff4065d0e991887d8d2",
+    "b3a23727d9ee26c271dad149b8c14ace", "0c26d08ad838450309b7bcad510e2976",
+    "d081dfb3e51cd74181264a68e2d1b832", "fe240f3a5e2543a75c0a3ea1c37efad1",
+    "174b87d47244805f8fb1b3584b00ec6f", "a2567f4003b3323dbd13f626c1e80c44",
+    "9de7514cfcb6e2d0978fdb1a6d316584", "fb6f8f87d4a377fe64dbb9e80165052c",
+    "4067acf9b5711dca52921a46621bd420", "3aaa2fd2cec3ef0f19cf07fa9304167a"
+  ).map(hexToBytes);
+
 }
 
 object Hash {
 
   val size = 3
 
-  private val h = new Hash(size)
+  private lazy val h = new Hash(size)
 
   def apply(board: Board, color: Color): PositionHash = h.apply(board, color)
 
