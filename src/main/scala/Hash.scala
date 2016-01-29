@@ -52,7 +52,7 @@ class Hash(
       case White => Array(whiteTurnMask)
     }
 
-    val castling = (board.history.castles.toList zip castlingMasks).map {
+    val castling = (situation.history.castles.toList zip castlingMasks).map {
       case (canCastle, castlingMask) =>
         if (canCastle) castlingMask else zeroMask
     }
@@ -66,6 +66,21 @@ class Hash(
         Array(zeroMask)
     }
 
+    // Hash in sepcial three-check data.
+    val checks = board.variant match {
+      case variant.ThreeCheck =>
+        val blackCount = Math.min(situation.history.checkCount.black, 3)
+        val whiteCount = Math.min(situation.history.checkCount.white, 3)
+
+        Array(
+          if (blackCount > 0) threeCheckMasks(blackCount - 1) else zeroMask,
+          if (whiteCount > 0) threeCheckMasks(whiteCount - 1 + 3) else zeroMask
+        )
+      case _ =>
+        Array(zeroMask)
+    }
+
+    // Hash in special crazyhouse data.
     val crazy = board.crazyData match {
       case Some(data) =>
         ((data.promoted.map {
@@ -81,7 +96,7 @@ class Hash(
         Array(zeroMask)
     }
 
-    val masks = actors ++ turn ++ castling ++ ep ++ crazy
+    val masks = actors ++ turn ++ castling ++ ep ++ checks ++ crazy
 
     (masks.transpose.map { column =>
       column.reduce((a, b) => (a ^ b).toByte)
@@ -492,6 +507,12 @@ class Hash(
     "003a93d8b28069623d1adc27d706b921", "1c99ded33cb890a1994b8bd260c3fad2",
     "cf3145de0add4289f4cf0c83cace7fe4", "d0e4427a5514fb7254807a18b6952e27",
     "77c621cc9fb3a483e2a1aff40d08315c", "67a34dac4356550b47ec43ffbc092584"
+  ).map(hexToBytes)
+
+  val threeCheckMasks = Array(
+    "1d6dc0ee61ce803e6a2ad922a69a13e9", "c6284b653d38e96a49b572c7942027d5",
+    "803f5fb0d2f97fae08c2e9271dc91e69", "b183ccc9e73df9ed088dfad983bb7913",
+    "fdeef11602d6b44390a852cacfc0adeb", "1b0ce4198b3801a6c8ce065f15fe38f5"
   ).map(hexToBytes)
 
   val crazyPromotionMasks = Array(
