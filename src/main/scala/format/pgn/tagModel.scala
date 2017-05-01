@@ -20,6 +20,7 @@ object Tag {
   case object Round extends TagType
   case object White extends TagType
   case object Black extends TagType
+  case object Result extends TagType
   case object TimeControl extends TagType
   case object WhiteClock extends TagType
   case object BlackClock extends TagType
@@ -29,7 +30,6 @@ object Tag {
   case object BlackTitle extends TagType
   case object WhiteTeam extends TagType
   case object BlackTeam extends TagType
-  case object Result extends TagType
   case object FEN extends TagType
   case object Variant extends TagType
   case object ECO extends TagType
@@ -41,10 +41,12 @@ object Tag {
     override val isUnknown = true
   }
 
-  val tagTypes = List(
-    Event, Site, Date, Round, White, Black, TimeControl,
-    WhiteClock, BlackClock, WhiteElo, BlackElo, WhiteTitle, BlackTitle,
-    WhiteTeam, BlackTeam, Result, FEN, Variant, ECO, Opening, Termination, Annotator
+  val sevenTagRoster = List(Event, Site, Date, Round, White, Black, Result)
+
+  val tagTypes = sevenTagRoster ::: List(
+    TimeControl, WhiteClock, BlackClock,
+    WhiteElo, BlackElo, WhiteTitle, BlackTitle,
+    WhiteTeam, BlackTeam, FEN, Variant, ECO, Opening, Termination, Annotator
   )
   val tagTypesByLowercase: Map[String, TagType] =
     tagTypes.map { t => t.lowercase -> t }(scala.collection.breakOut)
