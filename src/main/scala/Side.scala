@@ -23,12 +23,12 @@ case object KingSide extends Side {
   val castledKingFile = File.G
   val castledRookFile = File.F
 
-  val tripToRook: (Pos, Board) => List[Pos] = (pos, board) => pos >| board.pieces.contains
+  val tripToRook: (Pos, Board) => List[Pos] = (pos, board) => pos >| board.pieces.has
 }
 case object QueenSide extends Side {
 
   val castledKingFile = File.C
   val castledRookFile = File.D
 
-  val tripToRook: (Pos, Board) => List[Pos] = (pos, board) => pos |< board.pieces.contains
+  val tripToRook: (Pos, Board) => List[Pos] = (pos, board) => pos |< board.pieces.has
 }

@@ -42,7 +42,7 @@ case object Horde
 
   /** The game has a special end condition when black manages to capture all of white's pawns */
   override def specialEnd(situation: Situation) =
-    situation.board.piecesOf(White).isEmpty
+    situation.board.pieces.colors.white.isEmpty
 
   /**
     * Any vs K + any where horde is stalemated and only king can move is a fortress draw
@@ -50,10 +50,10 @@ case object Horde
     * nor does it consider contrived fortresses such as b7/pk6/P7/P7/8/8/8/8 b - -
     */
   private def hordeClosedPosition(board: Board) = {
-    lazy val notKingBoard = board.kingPos.get(Color.black).flatMap(board.take).getOrElse(board)
-    val hordePos          = board.occupation(Color.white) // may include promoted pieces
+    lazy val notKingBoard = board.kingPosOf(Color.black).flatMap(board.take).getOrElse(board)
+    val hordePos          = board.pieces.colors.white
     val mateInOne =
-      hordePos.sizeIs == 1 && hordePos.forall(pos => pieceThreatened(board, Color.black, pos, (_ => true)))
+      hordePos.size == 1 && hordePos.forall(pos => pieceThreatened(board, Color.black, pos, (_ => true)))
     !mateInOne && notKingBoard.actors.values.forall(actor => actor.moves.isEmpty)
   }
 
@@ -69,7 +69,7 @@ case object Horde
     * Technically there are some positions where stalemate is unavoidable which
     * this method does not detect; however, such are trivial to premove.
     */
-  override def opponentHasInsufficientMaterial(situation: Situation): Boolean = {
+  override def opponentHasInsufficientMaterial(situation: Situation): Boolean = ??? /* {
     val board         = situation.board
     val opponentColor = !situation.color
     lazy val fortress = hordeClosedPosition(board) // costly function call
@@ -112,7 +112,7 @@ case object Horde
         true
       else fortress
     } else fortress
-  }
+  } */
 
   override def isUnmovedPawn(color: Color, pos: Pos) =
     if (color.white) pos.rank <= Rank.Second

@@ -34,5 +34,5 @@ case object ThreeCheck
 
   // When there is insufficient mating material, there is still potential to win by checking the opponent 3 times
   // by the variant ending. However, no players can check if there are only kings remaining
-  override def isInsufficientMaterial(board: Board) = board.pieces.values.forall(_ is King)
+  override def isInsufficientMaterial(board: Board) = board.pieces.occupied == board.pieces.king
 }

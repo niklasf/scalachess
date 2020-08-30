@@ -39,7 +39,7 @@ case object Atomic
       color: Color,
       to: Pos,
       filter: Piece => Boolean = _ => true
-  ): Boolean = {
+  ): Boolean = ??? /* {
     board.pieces exists {
       case (pos, piece) =>
         piece.color == color && filter(piece) && !protectedByOtherKing(
@@ -48,7 +48,7 @@ case object Atomic
           color
         ) && piece.attacks(pos, board.occupied).has(to)
     }
-  }
+  } */
 
   // moves exploding opponent king are always playable
   override def kingSafety(m: Move, filter: Piece => Boolean, kingPos: Option[Pos]): Boolean = {
@@ -67,8 +67,8 @@ case object Atomic
 
       // Pawns are immune (for some reason), but all pieces surrounding the captured piece and the capturing piece
       // itself explode
-      val piecesToExplode = affectedPos.filter(boardPieces.get(_).fold(false)(_.isNot(Pawn))) + destination
-      val afterExplosions = boardPieces -- piecesToExplode
+      val piecesToExplode = boardPieces.occupied -- boardPieces.pawn + destination
+      val afterExplosions = boardPieces.discardAll(piecesToExplode)
 
       val newBoard = afterBoard withPieces afterExplosions
       move withAfter newBoard
@@ -88,16 +88,10 @@ case object Atomic
     * then either a queen or multiple pieces are required for checkmate.
     */
   private def insufficientAtomicWinningMaterial(board: Board) = {
-    val kingsAndBishopsOnly = board.pieces forall { p =>
-      (p._2 is King) || (p._2 is Bishop)
-    }
+    val kingsAndBishopsOnly = board.pieces.occupied == (board.pieces.king | board.pieces.bishop)
     lazy val bishopsOnOppositeColors = InsufficientMatingMaterial.bishopsOnOppositeColors(board)
-    lazy val kingsAndKnightsOnly = board.pieces forall { p =>
-      (p._2 is King) || (p._2 is Knight)
-    }
-    lazy val kingsRooksAndMinorsOnly = board.pieces forall { p =>
-      (p._2 is King) || (p._2 is Rook) || (p._2 is Bishop) || (p._2 is Knight)
-    }
+    lazy val kingsAndKnightsOnly = board.pieces.occupied == (board.pieces.king | board.pieces.knight)
+    lazy val kingsRooksAndMinorsOnly = board.pieces.pawn.isEmpty && board.pieces.queen.isEmpty
 
     // Bishops of opposite color (no other pieces) endgames are dead drawn
     // except if either player has multiple bishops so a helpmate is possible
@@ -127,7 +121,9 @@ case object Atomic
         && InsufficientMatingMaterial.pawnBlockedByPawn(actor, board))
         || actor.piece.is(King) || actor.piece.is(Bishop)
     )
-    val randomBishop = board.pieces.find { case (_, piece) => piece.is(Bishop) }
+    val randomBishop = board.pieces.bishop.headOption map { pos =>
+      pos -> Color.fromWhite(board.pieces.colors.white.has(pos)).bishop
+    }
     val bishopsAbsentOrPawnitized = randomBishop match {
       case Some((pos, piece)) => bishopPawnitized(board, piece.color, pos.isLight)
       case None               => true
@@ -153,5 +149,5 @@ case object Atomic
     situation.board.rolesOf(!situation.color) == List(King)
 
   /** Atomic chess has a special end where a king has been killed by exploding with an adjacent captured piece */
-  override def specialEnd(situation: Situation) = situation.board.kingPos.size != 2
+  override def specialEnd(situation: Situation) = Color.all.exists(situation.board.pieces(_).isEmpty)
 }

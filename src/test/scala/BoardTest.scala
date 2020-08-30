@@ -9,7 +9,7 @@ class BoardTest extends ChessTest {
   "a board" should {
 
     "position pieces correctly" in {
-      board.pieces must havePairs(
+      board.pieces.toMap must havePairs(
         A1 -> (White - Rook),
         B1 -> (White - Knight),
         C1 -> (White - Bishop),
@@ -46,7 +46,7 @@ class BoardTest extends ChessTest {
     }
 
     "have pieces by default" in {
-      board.pieces must not beEmpty
+      board.pieces.toMap must not beEmpty
     }
 
     "have castling rights by default" in {
@@ -104,38 +104,37 @@ class BoardTest extends ChessTest {
     }
 
     "provide occupation map" in {
-      makeBoard(
+      val pieces = makeBoard(
         A2 -> (White - Pawn),
         A3 -> (White - Pawn),
         D1 -> (White - King),
         E8 -> (Black - King),
         H4 -> (Black - Queen)
-      ).occupation must_== Color.Map(
-        white = Set(A2, A3, D1),
-        black = Set(E8, H4)
-      )
+      ).pieces
+      pieces.colors.white must_== Set(A2, A3, D1)
+      pieces.colors.black must_== Set(E8, H4)
     }
 
     "navigate in pos based on pieces" in {
       "right to end" in {
         val board: Board = """
 R   K  R"""
-        E1 >| (p => board.pieces contains p) must_== List(F1, G1, H1)
+        E1 >| (p => board.pieces has p) must_== List(F1, G1, H1)
       }
       "right to next" in {
         val board: Board = """
 R   KB R"""
-        E1 >| (p => board.pieces contains p) must_== List(F1)
+        E1 >| (p => board.pieces has p) must_== List(F1)
       }
       "left to end" in {
         val board: Board = """
 R   K  R"""
-        E1 |< (p => board.pieces contains p) must_== List(D1, C1, B1, A1)
+        E1 |< (p => board.pieces has p) must_== List(D1, C1, B1, A1)
       }
       "right to next" in {
         val board: Board = """
 R  BK  R"""
-        E1 |< (p => board.pieces contains p) must_== List(D1)
+        E1 |< (p => board.pieces has p) must_== List(D1)
       }
     }
   }

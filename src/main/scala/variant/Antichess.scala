@@ -38,14 +38,12 @@ case object Antichess
 
   override def specialEnd(situation: Situation) = {
     // The game ends with a win when one player manages to lose all their pieces or is in stalemate
-    situation.board.piecesOf(situation.color).isEmpty || situation.moves.isEmpty
+    situation.board.pieces(situation.color).isEmpty || situation.moves.isEmpty
   }
 
   // In antichess, it is valuable for your opponent to have pieces.
   override def materialImbalance(board: Board): Int =
-    board.pieces.values.foldLeft(0) {
-      case (acc, Piece(color, _)) => acc + color.fold(-2, 2)
-    }
+    2 * (board.pieces(Black).size - board.pieces(White).size)
 
   // In antichess, there is no checkmate condition therefore a player may only draw either by agreement,
   // blockade or stalemate. A player always has sufficient material to win otherwise.
@@ -56,8 +54,8 @@ case object Antichess
   // of square to allow the player to force their opponent to capture their bishop, also resulting in a draw
   override def isInsufficientMaterial(board: Board) = {
     // Exit early if we are not in a situation with only bishops and pawns
-    val bishopsAndPawns = board.pieces.values.forall(p => p.is(Bishop) || p.is(Pawn)) &&
-      board.pieces.values.exists(_.is(Bishop))
+    val bishopsAndPawns = board.pieces.occupied == (board.pieces.bishop | board.pieces.pawn) &&
+      board.pieces.bishop.nonEmpty
 
     lazy val drawnBishops = board.actors.values.partition(_.is(White)) match {
       case (whitePieces, blackPieces) =>

@@ -32,13 +32,7 @@ object Forsyth {
             val (castles, unmovedRooks) = strCastles.foldLeft(Castles.none -> PosSet.empty) {
               case ((c, r), ch) =>
                 val color = Color.fromWhite(ch.isUpper)
-                val rooks = board
-                  .piecesOf(color)
-                  .collect {
-                    case (pos, piece) if piece.is(Rook) && pos.rank == color.backRank => pos
-                  }
-                  .toList
-                  .sortBy(_.file)
+                val rooks = (board.pieces(color.rook) & PosSet(color.backRank)).toList.sortBy(_.file)
                 (for {
                   kingPos <- board.kingPosOf(color)
                   rookPos <- (ch.toLower match {
@@ -221,15 +215,11 @@ object Forsyth {
 
   private[chess] def exportCastles(board: Board): String = {
 
-    lazy val wr = board.pieces.collect {
-      case (pos, piece) if pos.rank == White.backRank && piece == White.rook => pos
-    }
-    lazy val br = board.pieces.collect {
-      case (pos, piece) if pos.rank == Black.backRank && piece == Black.rook => pos
-    }
+    lazy val wr = board.pieces(White.rook) & PosSet.whiteBackRank
+    lazy val br = board.pieces(Black.rook) & PosSet.blackBackRank
 
-    lazy val wur = board.unmovedRooks.pos.filter(_.rank == White.backRank)
-    lazy val bur = board.unmovedRooks.pos.filter(_.rank == Black.backRank)
+    lazy val wur = board.unmovedRooks.pos & PosSet.whiteBackRank
+    lazy val bur = board.unmovedRooks.pos & PosSet.blackBackRank
 
     {
       // castling rights with inner rooks are represented by their file name

@@ -17,11 +17,11 @@ final case class Actor(
     val moves = piece.role match {
       case Pawn =>
         pawnDir(pos) map { next =>
-          val fwd = Option(next) filterNot board.pieces.contains
+          val fwd = Option(next) filterNot board.pieces.has
           def capture(horizontal: Direction): Option[Move] = {
             for {
               p <- horizontal(next)
-              if board.pieces.get(p).exists { _.color != color }
+              if board.pieces(!color).has(p)
               b <- board.taking(pos, p)
             } yield move(p, b, Option(p))
           } flatMap maybePromote
@@ -52,7 +52,7 @@ final case class Actor(
             for {
               p  <- fwd.filter(_ => board.variant.isUnmovedPawn(color, pos))
               p2 <- pawnDir(p)
-              if !(board.pieces contains p2)
+              if !(board.pieces has p2)
               b <- board.move(pos, p2)
             } yield move(p2, b),
             capture(_.left),
@@ -63,7 +63,7 @@ final case class Actor(
         } getOrElse Nil
 
       case King if withCastle => range(PosSet.kingAttacks(pos)) ::: castle
-      case _                  => range(piece.attacks(pos, board.occupied))
+      case _                  => range(piece.attacks(pos, board.pieces.occupied))
     }
 
     // We apply the current game variant's effects if there are any so that we can accurately decide if the king would
@@ -106,10 +106,10 @@ final case class Actor(
       // Check impeded castling.
       newKingPos       = Pos(side.castledKingFile, kingPos.rank)
       newRookPos       = Pos(side.castledRookFile, rookPos.rank)
-      kingPath         = kingPos <-> newKingPos
-      rookPath         = rookPos <-> newRookPos
-      mustBeUnoccupied = (kingPath ++ rookPath).filter(_ != kingPos).filter(_ != rookPos)
-      if !mustBeUnoccupied.exists(board.pieces.contains)
+      kingPath         = (kingPos <-> newKingPos).to(PosSet)
+      rookPath         = (rookPos <-> newRookPos).to(PosSet)
+      mustBeUnoccupied = kingPath ++ rookPath - kingPos - rookPos
+      if board.pieces.occupied.intersect(mustBeUnoccupied).isEmpty
       // Check the king is not currently attacked, and none of the squares it
       // passes *through* are attacked. We do this after removing the old king,
       // to ensure the old king does not shield attacks. This is important in
@@ -132,12 +132,9 @@ final case class Actor(
 
   private def range(dests: PosSet): List[Move] =
     dests.toList.flatMap { to =>
-      board.pieces.get(to) match {
-        case None => board.move(pos, to) map { move(to, _) }
-        case Some(piece) =>
-          if (piece is color) Nil
-          else board.taking(pos, to) map { move(to, _, Option(to)) }
-      }
+      if (!board.pieces.has(to)) board.move(pos, to) map { move(to, _) }
+      else if (board.pieces(color).has(to)) Nil
+      else board.taking(pos, to) map { move(to, _, Option(to)) }
     }
 
   private def pawnDir = pawnDirOf(color)

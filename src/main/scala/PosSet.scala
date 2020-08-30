@@ -21,6 +21,8 @@ case class PosSet private (bitboard: Long)
   def xor(that: PosSet): PosSet = PosSet(bitboard ^ that.bitboard)
   def ^(that: PosSet): PosSet   = xor(that)
 
+  def unary_~ = PosSet(~bitboard)
+
   override def iterator: Iterator[Pos] =
     new AbstractIterator[Pos] {
       private var bb: Long = bitboard
@@ -92,6 +94,10 @@ object PosSet extends SpecificIterableFactory[Pos, PosSet] {
   val center        = PosSet(Pos.E4, Pos.D4, Pos.E5, Pos.D5)
   val whiteBackRank = (Pos.A1 <-> Pos.H1).to(PosSet)
   val blackBackRank = (Pos.A8 <-> Pos.H8).to(PosSet)
+  val lightSquares  = full.filter(_.isLight)
+  val darkSquares   = ~lightSquares
+
+  def apply(rank: Rank): PosSet = PosSet(whiteBackRank.bitboard << (8 * rank.index))
 
   override def fromSpecific(that: scala.collection.IterableOnce[Pos]): PosSet =
     that match {

@@ -57,7 +57,7 @@ case class Std(
 
   def withMetas(m: Metas) = copy(metas = m)
 
-  def move(situation: Situation): Validated[String, chess.Move] =
+  def move(situation: Situation): Validated[String, chess.Move] = ??? /*
     situation.board.pieces.foldLeft(none[chess.Move]) {
       case (None, (pos, piece))
           if piece.color == situation.color && piece.role == role && compare(
@@ -75,7 +75,7 @@ case class Std(
     } match {
       case None       => Validated invalid s"No move found: $this\n$situation"
       case Some(move) => move withPromotion promotion toValid "Wrong promotion"
-    }
+    } */
 
   private def compare[A](a: Option[A], b: A) = a.fold(true)(b ==)
 }

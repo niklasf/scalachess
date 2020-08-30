@@ -20,9 +20,8 @@ case object Crazyhouse
   override val initialFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR/ w KQkq - 0 1"
 
   override def valid(board: Board, strict: Boolean) = {
-    val pieces = board.pieces.values
     (Color.all forall validSide(board, false)) &&
-    (!strict || (pieces.count(_ is Pawn) <= 16 && pieces.sizeIs <= 32))
+    (!strict || (board.pieces.pawn.size <= 16 && board.pieces.size <= 32))
   }
 
   private def canDropPawnOn(pos: Pos) = pos.rank != Rank.First && pos.rank != Rank.Eighth

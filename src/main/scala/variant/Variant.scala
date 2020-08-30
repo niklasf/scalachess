@@ -54,8 +54,8 @@ abstract class Variant private[variant] (
 
   // Optimised for performance
   def pieceThreatened(board: Board, color: Color, to: Pos, filter: Piece => Boolean = _ => true): Boolean = {
-    board.pieces exists {
-      case (pos, piece) => piece.color == color && filter(piece) && piece.attacks(pos, board.occupied).has(to)
+    board.pieces.toMap exists { // XXX
+      case (pos, piece) => piece.color == color && filter(piece) && piece.attacks(pos, board.pieces.occupied).has(to)
     }
   }
 
@@ -117,11 +117,11 @@ abstract class Variant private[variant] (
     * Returns the material imbalance in pawns (overridden in Antichess)
     */
   def materialImbalance(board: Board): Int =
-    board.pieces.values.foldLeft(0) {
-      case (acc, Piece(color, role)) =>
-        Role.valueOf(role).fold(acc) { value =>
-          acc + value * color.fold(1, -1)
-        }
+    Role.all.foldLeft(0) { (acc, role) =>
+      acc + (Role.valueOf(role) match {
+        case Some(factor) => factor * (board.pieces(White - role).size - board.pieces(White - role).size)
+        case None => 0
+      })
     }
 
   /**
@@ -157,12 +157,8 @@ abstract class Variant private[variant] (
     */
   @nowarn def finalizeBoard(board: Board, uci: format.Uci, captured: Option[Piece]): Board = board
 
-  protected def pawnsOnPromotionRank(board: Board, color: Color) = {
-    board.pieces.exists {
-      case (pos, Piece(c, r)) if c == color && r == Pawn && pos.rank == color.promotablePawnRank => true
-      case _                                                                                     => false
-    }
-  }
+  protected def pawnsOnPromotionRank(board: Board, color: Color) =
+    (board.pieces(color.pawn) & PosSet(color.promotablePawnRank)).nonEmpty
 
   protected def validSide(board: Board, strict: Boolean)(color: Color) = {
     val roles = board rolesOf color

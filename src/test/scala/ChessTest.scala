@@ -31,7 +31,7 @@ trait ChessTest extends Specification with ValidatedMatchers {
 
   case class RichActor(actor: Actor) {
     def threatens(to: Pos): Boolean =
-      actor.piece.attacks(actor.pos, actor.board.occupied).has(to)
+      actor.piece.attacks(actor.pos, actor.board.pieces.occupied).has(to)
   }
 
   implicit def richActor(actor: Actor) = RichActor(actor)
