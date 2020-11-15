@@ -31,7 +31,7 @@ object StartingPosition {
         StartingPosition(
           "B00",
           "King's Pawn",
-          FEN("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 1 1"),
+          FEN("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"),
           "King's_Pawn_Game",
           "1. e4",
           featurable = false
@@ -47,7 +47,7 @@ object StartingPosition {
         StartingPosition(
           "B02",
           "Alekhine's Defence",
-          FEN("rnbqkb1r/pppppppp/5n2/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 2 2"),
+          FEN("rnbqkb1r/pppppppp/5n2/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2"),
           "Alekhine's_Defence",
           "1. e4 Nf6"
         ),
@@ -61,35 +61,35 @@ object StartingPosition {
         StartingPosition(
           "C23",
           "Bishop's Opening",
-          FEN("rnbqkbnr/pppp1ppp/8/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR b KQkq - 2 2"),
+          FEN("rnbqkbnr/pppp1ppp/8/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 2"),
           "Bishop%27s_Opening",
           "1. e4 e5 2. Bc4"
         ),
         StartingPosition(
           "B10",
           "Caro-Kann Defence",
-          FEN("rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2"),
+          FEN("rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2"),
           "Caro–Kann_Defence",
           "1. e4 c6"
         ),
         StartingPosition(
           "B12",
           "Caro-Kann Defence: Advance Variation",
-          FEN("rnbqkbnr/pp2pppp/2p5/3pP3/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 1 3"),
+          FEN("rnbqkbnr/pp2pppp/2p5/3pP3/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 0 3"),
           "Caro–Kann_Defence#Advance_Variation:_3.e5",
           "1. e4 c6 2. d4 d5 3. e5"
         ),
         StartingPosition(
           "B18",
           "Caro-Kann Defence: Classical Variation",
-          FEN("rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 2 5"),
+          FEN("rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5"),
           "Caro–Kann_Defence#Classical_Variation:_4...Bf5",
           "1. e4 c6 2. d4 d5 3. Nc3 dxe4 4. Nxe4 Bf5"
         ),
         StartingPosition(
           "B13",
           "Caro-Kann Defence: Exchange Variation",
-          FEN("rnbqkbnr/pp2pppp/2p5/3P4/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 1 3"),
+          FEN("rnbqkbnr/pp2pppp/2p5/3P4/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 0 3"),
           "Caro%E2%80%93Kann_Defence#Exchange_Variation:_3.exd5_cxd5",
           "1. e4 c6 2. d4 d5 3. exd5"
         ),
@@ -110,39 +110,39 @@ object StartingPosition {
         StartingPosition(
           "C21",
           "Danish Gambit",
-          FEN("rnbqkbnr/pppp1ppp/8/8/3pP3/2P5/PP3PPP/RNBQKBNR b KQkq - 1 3"),
+          FEN("rnbqkbnr/pppp1ppp/8/8/3pP3/2P5/PP3PPP/RNBQKBNR b KQkq - 0 3"),
           "Danish_Gambit",
           "1. e4 e5 2. d4 exd4 3. c3"
         ),
         StartingPosition(
           "C46",
           "Four Knights Game",
-          FEN("r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 5 4"),
+          FEN("r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 4 4"),
           "Four_Knights_Game",
           "1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6"
         ),
         StartingPosition(
           "C47",
           "Four Knights Game: Scotch Variation",
-          FEN("r1bqkb1r/pppp1ppp/2n2n2/4p3/3PP3/2N2N2/PPP2PPP/R1BQKB1R b KQkq d3 1 4"),
+          FEN("r1bqkb1r/pppp1ppp/2n2n2/4p3/3PP3/2N2N2/PPP2PPP/R1BQKB1R b KQkq - 0 4"),
           "Four_Knights_Game#4.d4",
           "1. e4 e5 2. Nf3 Nc6 3. Nc3 Nf6 4. d4"
         ),
         StartingPosition(
           "C48",
           "Four Knights Game: Spanish Variation",
-          FEN("r1bqkb1r/pppp1ppp/2n2n2/1B2p3/4P3/2N2N2/PPPP1PPP/R1BQK2R b KQkq - 0 4"),
+          FEN("r1bqkb1r/pppp1ppp/2n2n2/1B2p3/4P3/2N2N2/PPPP1PPP/R1BQK2R b KQkq - 5 4"),
           "Four_Knights_Game#4.Bb5",
           "1. e4 e5 2. Nf3 Nf6 3. Nc3 Nc6 4. Bb5"
         ),
         StartingPosition(
           "C00",
           "French Defence",
-          FEN("rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 1 2"),
+          FEN("rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2"),
           "French_Defence",
           "1. e4 e6"
         ),
-        StartingPosition(
+        StartingPosition( #xxx
           "C02",
           "French Defence: Advance Variation",
           FEN("rnbqkbnr/ppp2ppp/4p3/3pP3/3P4/8/PPP2PPP/RNBQKBNR b KQkq - 1 3"),
